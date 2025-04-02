@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+        .container {
+            margin-top: 50px;
+            max-width: 800px;
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        .form-control {
+            border-radius: 8px;
+        }
+        .btn-success {
+            border-radius: 8px;
+            transition: all 0.3s ease-in-out;
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        .btn-success:hover {
+            transform: scale(1.05);
+            background-color: #218838;
+            border-color: #218838;
+        }
+        .navbar {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            padding: 10px 15px;
+        }
+        .navbar-brand, .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-link:hover {
+            text-decoration: underline;
+        }
+        .ms-auto {
+            margin-left: auto !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Django Project</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/index/">Data Visualization</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/upload/" style="text-decoration: underline; color: white !important; font-size: 15px;">Upload Data</a></li>
+                </ul>
+            </div>            
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Upload CSV -->
+        <div class="card">
+            <div class="card-header">📂 Upload CSV File</div>
+            <div class="card-body">
+                {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Chọn tệp CSV:</label>
+                        <input class="form-control" type="file" name="file" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">📤 Upload CSV</button>
+                </form>
+                {% if success %}
+                    <div class="alert alert-success mt-3">{{ success }}</div>
+                    <a href="{% url 'index' %}" class="btn btn-success w-100">📊 Xem Visualization</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Thêm Đơn Hàng Mới -->
+        <div class="card">
+            <div class="card-header">📝 Nhập thông tin đơn hàng</div>
+            <div class="card-body">
+                <form method="post" action="/add_order/">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Thời gian đặt hàng</label>
+                        <input type="datetime-local" class="form-control" name="created_at" id="created_at" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mã Đơn Hàng</label>
+                        <input type="text" class="form-control" name="order_code" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mã Khách Hàng</label>
+                        <input type="text" class="form-control" name="customer_id" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tên Khách Hàng</label>
+                        <input type="text" class="form-control" name="customer_name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mã Nhóm Hàng</label>
+                        <select id="group_code" class="form-control" required>
+                            <option value="">Chọn Mã Nhóm Hàng</option>
+                            {% for group in groups %}
+                                <option value="{{ group.group_code }}">{{ group.group_code }} - {{ group.group_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mã Mặt Hàng</label>
+                        <select id="product_code" name="product_code" class="form-control" required></select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Số Lượng</label>
+                        <input type="number" class="form-control" name="quantity" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Thành Tiền</label>
+                        <input type="number" class="form-control" name="total_amount" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">➕ Thêm Đơn Hàng</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const now = new Date();
+            const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                .toISOString().slice(0, 16);
+            document.getElementById('created_at').value = localDateTime;
+        });
+
+        document.getElementById('group_code').addEventListener('change', function() {
+            var groupCode = this.value;
+            if (groupCode) {
+                fetch(`/get-products/${groupCode}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const productSelect = document.getElementById('product_code');
+                        productSelect.innerHTML = '<option value="">Chọn Mã Mặt Hàng</option>';
+                        data.forEach(product => {
+                            const option = document.createElement('option');
+                            option.value = product.product_code;
+                            option.textContent = `${product.product_code} - ${product.product_name}`;
+                            productSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Lỗi khi tải dữ liệu:', error));
+            }
+        });
+    </script>
+
+</body>
+</html>
